@@ -1,0 +1,10 @@
+.nextflow*
+work*
+*.chain
+*.fa
+*.fasta
+*.bed
+*.gtf
+Chimp.fa
+files*
+testing/
