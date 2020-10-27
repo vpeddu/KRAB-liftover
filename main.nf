@@ -76,7 +76,7 @@ process smashFasta {
     publishDir "${OUTDIR}/smashFasta", mode: 'copy'
 
     output:
-        file "${BASE}.smashed.fasta"
+        tuple(val(BASE), file("${BASE}.smashed.fasta")) into translateCh
 
     cpus 2
     memory 4.Gb 
@@ -92,6 +92,80 @@ process smashFasta {
     """
 }
 
+process faTrans {  
+    input: 
+        tuple(val(BASE), file(SMASHED_FASTA)) from translateCh
+        //val BASE
+
+    container 'genomicpariscentre/kentutils'   
+    publishDir "${OUTDIR}/faTrans", mode: 'copy'
+
+    output:
+        tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
+
+    cpus 2
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    faTrans ${SMASHED_FASTA} ${BASE}.translated.fasta
+
+
+    """
+}
+
+
+process MAFFT {  
+    input: 
+        tuple(val(BASE), file(TRANSLATED_FASTA)) from alignCh
+        //val BASE
+
+    container 'staphb/mafft'   
+    publishDir "${OUTDIR}/MAFFT", mode: 'copy'
+
+    output:
+        tuple(val(BASE),file("${BASE}.aligned.fasta")) into treeCh
+
+    cpus 2
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    mafft --thread ${task.cpus} ${TRANSLATED_FASTA} > ${BASE}.aligned.fasta
+
+
+    """
+}
+
+process fastTree {  
+    input: 
+        tuple(val(BASE), file(ALIGNED_FASTA)) from treeCh
+        //val BASE
+
+    container 'staphb/fasttree'   
+    publishDir "${OUTDIR}/fastTree", mode: 'copy'
+
+    output:
+        tuple(val(BASE),file("${BASE}.tree.newick"))
+
+    cpus 2
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    export OMP_NUM_THREADS=${task.cpus}
+
+    FastTree ${ALIGNED_FASTA} > ${BASE}.tree.newick
+
+
+    """
+}
 
 def helpMessage() {
     log.info"""
