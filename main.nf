@@ -150,7 +150,7 @@ process fastTree {
     publishDir "${OUTDIR}/fastTree", mode: 'copy'
 
     output:
-        tuple(val(BASE),file("${BASE}.tree.newick"))
+        tuple(val(BASE),file("${BASE}.tree.newick")) into compareTreesCh
 
     cpus 2
     memory 4.Gb 
@@ -166,6 +166,36 @@ process fastTree {
 
     """
 }
+
+compareTreesCh.view()
+
+
+process COLLECTTREE {  
+    input: 
+        tuple(val(BASE), file(ALIGNED_FASTA)) from compareTreesCh
+        //val BASE
+
+    container 'staphb/fasttree'   
+    //publishDir "${OUTDIR}/fastTree", mode: 'copy'
+
+    //output:
+    //    tuple(val(BASE),file("${BASE}.tree.newick"))
+
+    cpus 2
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    echo 'here'
+
+
+    """
+}
+
+
+
 
 def helpMessage() {
     log.info"""
