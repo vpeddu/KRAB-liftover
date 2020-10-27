@@ -54,7 +54,7 @@ process getFasta {
     output:
         tuple(val(BASE), file("${BASE}.extracted.fasta")) into toSmashCh
 
-    cpus 2
+    cpus 1
     memory 4.Gb 
 
     script:
@@ -103,8 +103,8 @@ process faTrans {
     output:
         tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
 
-    cpus 2
-    memory 4.Gb 
+    cpus 1
+    memory 2.Gb 
 
     script:
     """
@@ -150,7 +150,8 @@ process fastTree {
     publishDir "${OUTDIR}/fastTree", mode: 'copy'
 
     output:
-        tuple(val(BASE),file("${BASE}.tree.newick")) into compareTreesCh
+        tuple(val(BASE),file("${BASE}.tree.newick")) 
+        file "${BASE}.tree.newick" into compareTreesCh
 
     cpus 2
     memory 4.Gb 
@@ -167,12 +168,11 @@ process fastTree {
     """
 }
 
-compareTreesCh.view()
+//compareTreesCh.toList().view()
 
-
-process COLLECTTREE {  
+process compareTrees {  
     input: 
-        tuple(val(BASE), file(ALIGNED_FASTA)) from compareTreesCh
+        file treefiles from compareTreesCh.collect()
         //val BASE
 
     container 'staphb/fasttree'   
@@ -188,7 +188,7 @@ process COLLECTTREE {
     """
     #!/bin/bash
 
-    echo 'here'
+    ls -latr
 
 
     """
