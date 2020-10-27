@@ -1,21 +1,34 @@
 OUTDIR = "${params.OUTDIR}"
 BEDFILE = file("${params.BED}")
-CHAINFILE = file ("${params.CHAIN}")
-REF_FASTA = file("${params.REFERENCE}")
-BASE = "${params.base}"
+//CHAINFILE = file ("${params.CHAIN}")
+//REF_FASTA = file("${params.REFERENCE}")
+//BASE = "${params.base}"
+
+
+METADATA = file("${params.METADATA}")
+
+
+metadataCh = Channel
+        .fromPath(METADATA)
+        .splitCsv(header:true)
+        .map{ row-> tuple(row.blank, (row.SampleName), file(row.ChainFile), file(row.ReferenceFasta)) }
+
+//metadataCh.view()  
 
 
 process liftOver {  
     input: 
         file BEDFILE 
-        file CHAINFILE
-        val BASE
+        tuple(val(blank), val(BASE), file(CHAINFILE), file(REFERENCE)) from metadataCh
+        //file CHAINFILE
+        //val BASE
     container 'quay.io/biocontainers/ucsc-liftover:357--h446ed27_4'   
-    publishDir "${OUTDIR}/liftOver", mode: 'copy'
+    publishDir "${OUTDIR}/liftOver/${BASE}.liftover", mode: 'copy'
 
     output:
         file "${BASE}.transferred.bed" into liftoverOutcH
         file "${BASE}.unmapped.bed"
+        tuple( val(BASE), file(CHAINFILE), file(REFERENCE)) into sampleCh
     cpus 2
     memory 4.Gb 
 
@@ -28,16 +41,18 @@ process liftOver {
     """
 }
 
+//sampleCh.view()
+
+
 process getFasta {  
     input: 
         file BEDFILE from liftoverOutcH
-        file REF_FASTA
-        val BASE
+        tuple(val(BASE), file(CHAINFILE), file(REFERENCE)) from sampleCh
     container 'quay.io/biocontainers/bedtools:2.26.0gx--he513fc3_4'   
-    publishDir "${OUTDIR}/getFasta", mode: 'copy'
+    publishDir "${OUTDIR}/getFasta/${BASE}.getFasta", mode: 'copy'
 
     output:
-        file "${BASE}.extracted.fasta" into toSmashCh
+        tuple(val(BASE), file("${BASE}.extracted.fasta")) into toSmashCh
 
     cpus 2
     memory 4.Gb 
@@ -46,7 +61,7 @@ process getFasta {
     """
     #!/bin/bash
 
-    bedtools getfasta -s -name -fi ${REF_FASTA} -bed ${BEDFILE} > ${BASE}.extracted.fasta
+    bedtools getfasta -s -name -fi ${REFERENCE} -bed ${BEDFILE} > ${BASE}.extracted.fasta
 
 
     """
@@ -54,8 +69,8 @@ process getFasta {
 
 process smashFasta {  
     input: 
-        file EXONFASTA from toSmashCh
-        val BASE
+        tuple(val(BASE),file(EXONFASTA)) from toSmashCh
+        //val BASE
 
     container 'quay.io/vpeddu/rgeneratesummary:latest'   
     publishDir "${OUTDIR}/smashFasta", mode: 'copy'
