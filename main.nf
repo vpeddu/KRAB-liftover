@@ -175,11 +175,11 @@ process compareTrees {
         file treefiles from compareTreesCh.collect()
         //val BASE
 
-    container 'staphb/fasttree'   
-    //publishDir "${OUTDIR}/fastTree", mode: 'copy'
+    container 'quay.io/biocontainers/r-phytools:0.6_99--r40h6115d3f_1'   
+    publishDir "${OUTDIR}", mode: 'copy'
 
-    //output:
-    //    tuple(val(BASE),file("${BASE}.tree.newick"))
+    output:
+        file "comparison_info.csv"
 
     cpus 2
     memory 4.Gb 
@@ -188,7 +188,7 @@ process compareTrees {
     """
     #!/bin/bash
 
-    ls -latr
+    Rscript --vanilla  ${baseDir}/bin/compare_trees.r 
 
 
     """
