@@ -42,7 +42,7 @@ for( i in df$gene){
     next
   }
   if(df$letter[matches[1]] == "A"){
-    smashed<-(paste0(df$sequence[matches][1], (df$sequence[matches][2])))
+    smashed<-(paste0(df$sequence[matches][2], (df$sequence[matches][1])))
     smashed_exons<-append(smashed_exons,smashed )
     new_headers<-append(new_headers,i)
     seen<-append(seen,i)
