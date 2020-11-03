@@ -24,7 +24,7 @@ process liftOver {
         //val BASE
     container 'quay.io/biocontainers/ucsc-liftover:357--h446ed27_4'   
     publishDir "${OUTDIR}/liftOver/${BASE}.liftover"
-    //, mode: 'copy'
+
 
     output:
         file "${BASE}.transferred.bed" into liftoverOutcH
