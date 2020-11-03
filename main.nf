@@ -72,11 +72,11 @@ process smashFasta {
         tuple(val(BASE),file(EXONFASTA)) from toSmashCh
         //val BASE
 
-    container 'quay.io/vpeddu/rgeneratesummary:latest'   
+    container 'quay.io/vpeddu/smashandtranslate:latest'   
     publishDir "${OUTDIR}/smashFasta", mode: 'copy'
 
     output:
-        tuple(val(BASE), file("${BASE}.smashed.fasta")) into translateCh
+        tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
 
     cpus 2
     memory 4.Gb 
@@ -87,34 +87,34 @@ process smashFasta {
 
     Rscript --vanilla ${baseDir}/bin/smash_fasta.r ${EXONFASTA}
 
-    mv smashed.fasta ${BASE}.smashed.fasta
+    mv smashed.fasta ${BASE}.translated.fasta
 
     """
 }
 
-process faTrans {  
-    input: 
-        tuple(val(BASE), file(SMASHED_FASTA)) from translateCh
-        //val BASE
+// process faTrans {  
+//     input: 
+//         tuple(val(BASE), file(SMASHED_FASTA)) from translateCh
+//         //val BASE
 
-    container 'genomicpariscentre/kentutils'   
-    publishDir "${OUTDIR}/faTrans", mode: 'copy'
+//     container 'genomicpariscentre/kentutils'   
+//     publishDir "${OUTDIR}/faTrans", mode: 'copy'
 
-    output:
-        tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
+//     output:
+//         tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
 
-    cpus 1
-    memory 2.Gb 
+//     cpus 1
+//     memory 2.Gb 
 
-    script:
-    """
-    #!/bin/bash
+//     script:
+//     """
+//     #!/bin/bash
 
-    faTrans ${SMASHED_FASTA} ${BASE}.translated.fasta
+//     faTrans ${SMASHED_FASTA} ${BASE}.translated.fasta
 
 
-    """
-}
+//     """
+// }
 
 
 process MAFFT {  
