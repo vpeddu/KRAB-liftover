@@ -1,3 +1,5 @@
+library(seqinr)
+
 # smash fasta
 args = commandArgs(trailingOnly=TRUE)
 
@@ -42,7 +44,7 @@ for( i in df$gene){
     next
   }
   if(df$letter[matches[1]] == "A"){
-    smashed<-(paste0(df$sequence[matches][2], (df$sequence[matches][1])))
+    smashed<-(paste0(df$sequence[matches][1], (df$sequence[matches][2])))
     smashed_exons<-append(smashed_exons,smashed )
     new_headers<-append(new_headers,i)
     seen<-append(seen,i)
@@ -50,6 +52,24 @@ for( i in df$gene){
 }
 smashed_fasta_df<-data.frame(smashed_exons, new_headers)
 colnames(smashed_fasta_df)<-c('seq','name')
+
+translated_fasta_df<-smashed_fasta_df
+
+for( i in 1:nrow(translated_fasta_df)){ 
+  temp_seq <- strsplit(translated_fasta_df$seq[i],'')
+  best_count<-100
+  best_frame <- NA
+  for( j in c(0:2)){
+    translation <- seqinr::translate(temp_seq[[1]], frame = j, NAstring = "X", ambiguous = FALSE)
+    stop_count = length(which(translation == "*"))
+    if (stop_count < best_count){ 
+      best_count <- stop_count
+      best_frame<-j
+    }
+  translated_fasta_df$seq[i]<- (paste(seqinr::translate(temp_seq[[1]], frame = best_frame, NAstring = "X", ambiguous = FALSE), collapse = ''))
+  #z<-(paste(seqinr::translate(temp_seq[[1]], frame = best_frame, NAstring = "X", ambiguous = FALSE), collapse = ''))
+    }
+  }
 #DNAString(smashed_fasta_df, names = smashed_fasta_df$new_headers, seq = smashed_fasta_df$smashed_exons)
 
 # writeXStringSet(smashed_fasta_df, 'test.fasta', append=FALSE,
@@ -68,4 +88,4 @@ writeFasta<-function(data, filename){
 
 # exampleData = dplyr::data_frame(name = smashed_fasta_df$new_headers,
 #                                 seq = smashed_fasta_df$smashed_exons)
-writeFasta(smashed_fasta_df, "smashed.fasta")
+writeFasta(translated_fasta_df, "smashed.fasta")

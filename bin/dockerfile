@@ -1,0 +1,12 @@
+# Base image https://hub.docker.com/u/rocker/
+FROM rocker/r-base:latest
+
+RUN apt-get -y update && apt-get install -y default-jdk r-cran-rjava r-cran-nloptr libssh2-1-dev
+
+RUN R -e "install.packages('BiocManager')"
+RUN R -e "install.packages('tidyverse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "BiocManager::install('EnsDb.Hsapiens.v86')"
+RUN R -e "BiocManager::install('tximport')"
+RUN R -e "install.packages('tidyr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('data.table',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "BiocManager::install('seqinr')"
