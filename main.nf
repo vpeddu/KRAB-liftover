@@ -205,7 +205,7 @@ process combineTrees {
         //val BASE
 
     container 'staphb/mafft'   
-    publishDir "${OUTDIR}/combined_output", mode: 'copy'
+    publishDir "${OUTDIR}/combined_output/alignment", mode: 'copy'
 
     output:
         file "all.aligned.fasta" into combinedTreeCh
@@ -231,14 +231,13 @@ process combinedFastTree {
         //val BASE
 
     container 'staphb/fasttree'   
-    publishDir "${OUTDIR}/fastTree", mode: 'copy'
+    publishDir "${OUTDIR}/combined_output/tree", mode: 'copy'
 
     output:
-        tuple(val(BASE),file("${BASE}.tree.newick")) 
-        file "${BASE}.tree.newick" into compareTreesCh
+        file 'combined.tree.newick'
 
-    cpus 2
-    memory 4.Gb 
+    cpus 4
+    memory 8.Gb 
 
     script:
     """
@@ -246,7 +245,7 @@ process combinedFastTree {
 
     export OMP_NUM_THREADS=${task.cpus}
 
-    FastTree ${ALIGNED_FASTA} > ${BASE}.tree.newick
+    FastTree ${allAligned} > combined.tree.newick
 
 
     """
