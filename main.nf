@@ -78,6 +78,7 @@ process smashFasta {
 
     output:
         tuple(val(BASE), file("${BASE}.translated.fasta")) into alignCh
+        file("${BASE}.translated.fasta") into combineAlignCh
 
     cpus 2
     memory 4.Gb 
@@ -86,7 +87,10 @@ process smashFasta {
     """
     #!/bin/bash
 
-    Rscript --vanilla ${baseDir}/bin/smash_fasta.r ${EXONFASTA}
+    echo "logging"
+    ls -latr
+
+    Rscript --vanilla ${baseDir}/bin/smash_fasta.r ${EXONFASTA} ${BASE}
 
     mv smashed.fasta ${BASE}.translated.fasta
 
@@ -195,7 +199,58 @@ process compareTrees {
     """
 }
 
+process combineTrees {  
+    input: 
+        file(TRANSLATED_FASTA) from combineAlignCh.collect()
+        //val BASE
 
+    container 'staphb/mafft'   
+    publishDir "${OUTDIR}/combined_output", mode: 'copy'
+
+    output:
+        file "all.aligned.fasta" into combinedTreeCh
+
+    cpus 4
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    ls -latr  
+
+    cat *.fasta > combined.fasta
+
+    mafft --thread ${task.cpus} combined.fasta > all.aligned.fasta
+    """
+}
+
+process combinedFastTree {  
+    input: 
+        file allAligned from combinedTreeCh
+        //val BASE
+
+    container 'staphb/fasttree'   
+    publishDir "${OUTDIR}/fastTree", mode: 'copy'
+
+    output:
+        tuple(val(BASE),file("${BASE}.tree.newick")) 
+        file "${BASE}.tree.newick" into compareTreesCh
+
+    cpus 2
+    memory 4.Gb 
+
+    script:
+    """
+    #!/bin/bash
+
+    export OMP_NUM_THREADS=${task.cpus}
+
+    FastTree ${ALIGNED_FASTA} > ${BASE}.tree.newick
+
+
+    """
+}
 
 
 def helpMessage() {
