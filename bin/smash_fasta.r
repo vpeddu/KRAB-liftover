@@ -29,6 +29,7 @@ df<-ReadFasta(args[1])
 #df$header<-as.character(df$header)
 #df$seq_name<-as.character(df$seq_name)
 
+base <- as.character(args[2])
 
 df$letter<-sapply(strsplit(as.character(df$seq_name), "_"), `[`, 1)
 df$header<-sapply(strsplit(as.character(df$seq_name), "_"), `[`, 2)
@@ -69,11 +70,19 @@ for( i in 1:nrow(translated_fasta_df)){
   translated_fasta_df$seq[i]<- (paste(seqinr::translate(temp_seq[[1]], frame = best_frame, NAstring = "X", ambiguous = FALSE), collapse = ''))
   #z<-(paste(seqinr::translate(temp_seq[[1]], frame = best_frame, NAstring = "X", ambiguous = FALSE), collapse = ''))
     }
+  translated_fasta_df$name[i]<-paste0(base,'_',translated_fasta_df$name[i])
   }
 #DNAString(smashed_fasta_df, names = smashed_fasta_df$new_headers, seq = smashed_fasta_df$smashed_exons)
 
 # writeXStringSet(smashed_fasta_df, 'test.fasta', append=FALSE,
 #                 compress=FALSE, compression_level=NA, format="fasta")
+
+# for(i in 1:nrow(translated_fasta_df)){ 
+#   translated_fasta_df$seq[i]
+
+# }
+
+
 
 writeFasta<-function(data, filename){
   fastaLines = c()
